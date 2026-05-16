@@ -1,0 +1,60 @@
+{
+  "name": "WatchlistItem",
+  "type": "object",
+  "properties": {
+    "product_name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "brand": {
+      "type": "string",
+      "description": "Brand name"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Product image URL"
+    },
+    "current_best_price": {
+      "type": "number",
+      "description": "Current lowest price found"
+    },
+    "best_platform": {
+      "type": "string",
+      "description": "Platform with the best price"
+    },
+    "target_price": {
+      "type": "number",
+      "description": "User's target price for alert"
+    },
+    "alert_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether price alert is active"
+    },
+    "search_id": {
+      "type": "string",
+      "description": "Reference to the search that found this product"
+    },
+    "price_history": {
+      "type": "array",
+      "description": "Price tracking over time",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "platform": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "product_name"
+  ]
+}

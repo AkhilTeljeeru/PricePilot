@@ -1,0 +1,128 @@
+{
+  "name": "SearchHistory",
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "The search query text"
+    },
+    "input_type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "url",
+        "image"
+      ],
+      "description": "How the user searched"
+    },
+    "product_name": {
+      "type": "string",
+      "description": "AI-extracted product name"
+    },
+    "brand": {
+      "type": "string",
+      "description": "AI-extracted brand"
+    },
+    "category": {
+      "type": "string",
+      "description": "Product category"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Product image URL"
+    },
+    "results": {
+      "type": "array",
+      "description": "Array of search results from all platforms",
+      "items": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "mrp": {
+            "type": "number"
+          },
+          "discount_percent": {
+            "type": "number"
+          },
+          "url": {
+            "type": "string"
+          },
+          "image_url": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "number"
+          },
+          "delivery_info": {
+            "type": "string"
+          },
+          "seller": {
+            "type": "string"
+          },
+          "is_exact_match": {
+            "type": "boolean"
+          },
+          "offers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "ai_verdict": {
+      "type": "object",
+      "description": "AI analysis of the results",
+      "properties": {
+        "best_deal": {
+          "type": "string"
+        },
+        "best_deal_reason": {
+          "type": "string"
+        },
+        "average_price": {
+          "type": "number"
+        },
+        "verdict": {
+          "type": "string"
+        },
+        "suspicious_results": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "share_id": {
+      "type": "string",
+      "description": "Unique ID for sharing results"
+    }
+  },
+  "required": [
+    "query"
+  ]
+}
