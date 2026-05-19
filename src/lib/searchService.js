@@ -96,7 +96,8 @@ export async function searchAllPlatforms(productInfo, userQuery, onPlatformUpdat
 
   // Call the live backend scraper API
   try {
-    const response = await fetch(`http://localhost:3000/api/search?q=${encodeURIComponent(searchQuery)}&platforms=${scrapedPlatforms.join(',')}`);
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const response = await fetch(`${apiUrl}/api/search?q=${encodeURIComponent(searchQuery)}&platforms=${scrapedPlatforms.join(',')}`);
     if (!response.ok) throw new Error(`Backend API error: ${response.statusText}`);
     
     const data = await response.json();

@@ -1,9 +1,10 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { scrapeAmazon, scrapeFlipkart, scrapeCroma, scrapeMyntra, scrapeAjio, scrapeSnapdeal, scrapeNykaa, scrapeReliance, scrapeJioMart, scrapeMeesho } = require('./scrapers');
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173' }));
 app.use(express.json());
 
 // Helper function to timeout promises

@@ -66,7 +66,8 @@ export default function Watchlist() {
       for (const item of items) {
         // Use the exact original query to fetch live prices consistently
         const searchQuery = item.query || item.product_name;
-        const response = await fetch(`http://localhost:3000/api/search?q=${encodeURIComponent(searchQuery)}`);
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const response = await fetch(`${apiUrl}/api/search?q=${encodeURIComponent(searchQuery)}`);
         if (response.ok) {
           const data = await response.json();
           if (data.results && data.results.length > 0) {
