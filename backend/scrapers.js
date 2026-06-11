@@ -53,10 +53,10 @@ async function scrapeAmazon(query) {
     const items = Array.from(document.querySelectorAll('[data-component-type="s-search-result"]')).slice(0, 8);
     return items.map(el => {
       let title = '';
-      const titleEl1 = el.querySelector('h2 a span');
-      const titleEl2 = el.querySelector('h2');
-      if (titleEl1) title = titleEl1.innerText.trim();
-      else if (titleEl2) title = titleEl2.innerText.trim();
+      const titleEl = el.querySelector('h2');
+      if (titleEl) {
+        title = titleEl.innerText.trim().replace(/\n/g, ' ');
+      }
       
       const priceEl = el.querySelector('.a-price-whole');
       const priceText = priceEl ? priceEl.innerText.split('.')[0].replace(/[^0-9]/g, '') : null;
