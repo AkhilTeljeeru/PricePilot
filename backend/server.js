@@ -1,10 +1,42 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const OpenAI = require('openai');
 const { scrapeAmazon, scrapeFlipkart, scrapeCroma, scrapeMyntra, scrapeAjio, scrapeSnapdeal, scrapeNykaa, scrapeReliance, scrapeJioMart, scrapeMeesho } = require('./scrapers');
 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
 const app = express();
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173' }));
+
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'https://www.typingmind.com'
+].filter(Boolean);
+
+const corsOptionsDelegate = function (req, callback) {
+  const origin = req.header('Origin');
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+  
+  // Whitelist specific IPs (e.g. TypingMind backend)
+  const isAllowedIp = clientIp.includes('74.220.48.') || clientIp.includes('74.220.56.');
+
+  if (
+    !origin || 
+    isAllowedIp ||
+    origin.endsWith('.vercel.app') || 
+    allowedOrigins.includes(origin)
+  ) {
+    callback(null, { origin: true });
+  } else {
+    callback(new Error('Not allowed by CORS'));
+  }
+};
+
+app.use(cors(corsOptionsDelegate));
+
 app.use(express.json());
 
 // Helper function to timeout promises
@@ -62,6 +94,29 @@ app.get('/api/search', async (req, res) => {
   }
 
   res.json({ results });
+});
+
+app.post('/api/llm', async (req, res) => {
+  try {
+    const { prompt, response_json_schema } = req.body;
+    
+    if (!prompt) {
+      return res.status(400).json({ error: 'Missing prompt' });
+    }
+
+    const fullPrompt = `${prompt}\n\nYou MUST respond in valid JSON matching this schema:\n${JSON.stringify(response_json_schema)}`;
+    
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: fullPrompt }],
+      response_format: { type: "json_object" },
+    });
+    
+    res.json(JSON.parse(completion.choices[0].message.content));
+  } catch (error) {
+    console.error("OpenAI API error:", error);
+    res.status(500).json({ error: 'Failed to process LLM request' });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
