@@ -24,13 +24,13 @@ Supports 3 input methods:
 ⌨️ Manual product search
 🤖 AI Product Intelligence
 
-Powered by Claude API:
+Powered by Google Gemini Pro API:
 
-Product extraction from image/text
+Product extraction from image/text (multimodal)
 Brand & model detection
 Smart search query generation
 Similar product matching
-AI recommendations
+AI recommendations & buying verdict
 Fake deal detection
 🌐 Multi-Site Parallel Search
 
@@ -145,7 +145,7 @@ PricePilot/
 Image Search Pipeline
 User uploads image
 Image compressed on client side
-Sent to Claude Vision
+Sent to Google Gemini Pro Multimodal Vision API
 AI extracts:
 Brand
 Model

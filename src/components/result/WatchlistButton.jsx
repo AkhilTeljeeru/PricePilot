@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Heart, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
 export default function WatchlistButton({ search }) {
@@ -23,14 +22,9 @@ export default function WatchlistButton({ search }) {
       price_history: [{ date: new Date().toISOString(), price: bestResult?.price || 0, platform: bestResult?.platform || '' }]
     };
     
-    try {
-      await base44.entities.WatchlistItem.create(itemData);
-    } catch (error) {
-      console.warn("DB Create failed, saving to local storage.");
-      const mockWatchlist = JSON.parse(localStorage.getItem('mock_watchlist') || '[]');
-      mockWatchlist.push({ ...itemData, id: Math.random().toString(36).substring(2, 10), created_date: new Date().toISOString() });
-      localStorage.setItem('mock_watchlist', JSON.stringify(mockWatchlist));
-    }
+    const mockWatchlist = JSON.parse(localStorage.getItem('mock_watchlist') || '[]');
+    mockWatchlist.push({ ...itemData, id: Math.random().toString(36).substring(2, 10), created_date: new Date().toISOString() });
+    localStorage.setItem('mock_watchlist', JSON.stringify(mockWatchlist));
     
     setSaving(false);
     setSaved(true);

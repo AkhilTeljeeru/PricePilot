@@ -1,6 +1,5 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { Heart, Trash2, Bell, BellOff, ExternalLink, Loader2, Search, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,12 +13,6 @@ export default function Watchlist() {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['watchlist'],
     queryFn: async () => {
-      try {
-        const result = await base44.entities.WatchlistItem.list('-created_date');
-        if (result && result.length > 0) return result;
-      } catch (e) {
-        console.warn("DB read failed, falling back to local storage");
-      }
       return JSON.parse(localStorage.getItem('mock_watchlist') || '[]').sort((a, b) => 
         new Date(b.created_date || 0) - new Date(a.created_date || 0)
       );
@@ -28,13 +21,9 @@ export default function Watchlist() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      try {
-        await base44.entities.WatchlistItem.delete(id);
-      } catch (e) {
-        let mockWatchlist = JSON.parse(localStorage.getItem('mock_watchlist') || '[]');
-        mockWatchlist = mockWatchlist.filter(item => item.id !== id);
-        localStorage.setItem('mock_watchlist', JSON.stringify(mockWatchlist));
-      }
+      let mockWatchlist = JSON.parse(localStorage.getItem('mock_watchlist') || '[]');
+      mockWatchlist = mockWatchlist.filter(item => item.id !== id);
+      localStorage.setItem('mock_watchlist', JSON.stringify(mockWatchlist));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['watchlist'] });
@@ -44,15 +33,11 @@ export default function Watchlist() {
 
   const toggleAlertMutation = useMutation({
     mutationFn: async ({ id, enabled, targetPrice }) => {
-      try {
-        await base44.entities.WatchlistItem.update(id, { alert_enabled: enabled, target_price: targetPrice });
-      } catch (e) {
-        let mockWatchlist = JSON.parse(localStorage.getItem('mock_watchlist') || '[]');
-        mockWatchlist = mockWatchlist.map(item => 
-          item.id === id ? { ...item, alert_enabled: enabled, target_price: targetPrice } : item
-        );
-        localStorage.setItem('mock_watchlist', JSON.stringify(mockWatchlist));
-      }
+      let mockWatchlist = JSON.parse(localStorage.getItem('mock_watchlist') || '[]');
+      mockWatchlist = mockWatchlist.map(item => 
+        item.id === id ? { ...item, alert_enabled: enabled, target_price: targetPrice } : item
+      );
+      localStorage.setItem('mock_watchlist', JSON.stringify(mockWatchlist));
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['watchlist'] }),
   });
@@ -66,24 +51,17 @@ export default function Watchlist() {
       for (const item of items) {
         // Use the exact original query to fetch live prices consistently
         const searchQuery = item.query || item.product_name;
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-        const response = await fetch(`${apiUrl}/api/search?q=${encodeURIComponent(searchQuery)}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.results && data.results.length > 0) {
-            const bestDeal = data.results[0];
-            try {
-              await base44.entities.WatchlistItem.update(item.id, {
-                current_best_price: bestDeal.price,
-                best_platform: bestDeal.platform
-              });
-            } catch (e) {
-              let mockWatchlist = JSON.parse(localStorage.getItem('mock_watchlist') || '[]');
-              mockWatchlist = mockWatchlist.map(wItem => 
-                wItem.id === item.id ? { ...wItem, current_best_price: bestDeal.price, best_platform: bestDeal.platform } : wItem
-              );
-              localStorage.setItem('mock_watchlist', JSON.stringify(mockWatchlist));
-            }
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+            const response = await fetch(`${apiUrl}/api/search?q=${encodeURIComponent(searchQuery)}`);
+            if (response.ok) {
+              const data = await response.json();
+              if (data.results && data.results.length > 0) {
+                const bestDeal = data.results[0];
+                let mockWatchlist = JSON.parse(localStorage.getItem('mock_watchlist') || '[]');
+                mockWatchlist = mockWatchlist.map(wItem => 
+                  wItem.id === item.id ? { ...wItem, current_best_price: bestDeal.price, best_platform: bestDeal.platform } : wItem
+                );
+                localStorage.setItem('mock_watchlist', JSON.stringify(mockWatchlist));
             updatedCount++;
             
             // Check if alert should trigger

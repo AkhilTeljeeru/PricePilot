@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 import { ArrowLeft, Share2, Loader2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -22,13 +21,6 @@ export default function Results() {
   const { data: search, isLoading } = useQuery({
     queryKey: ['search', id],
     queryFn: async () => {
-      try {
-        const results = await base44.entities.SearchHistory.filter({ id });
-        if (results && results.length > 0) return results[0];
-      } catch (e) {
-        console.warn("DB read failed, falling back to mock data");
-      }
-      
       const mockData = localStorage.getItem(`mock_search_${id}`);
       if (mockData) {
         return JSON.parse(mockData);
@@ -134,7 +126,7 @@ export default function Results() {
                   result={result}
                   index={index}
                   isSuspicious={suspiciousPlatforms.some(s =>
-                    s.toLowerCase().includes(result.platform?.toLowerCase())
+                    typeof s === 'string' && result.platform && s.toLowerCase().includes(result.platform.toLowerCase())
                   )}
                 />
               ))}

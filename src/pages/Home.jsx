@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Zap, Shield, Clock, BarChart3, Sparkles } from 'lucide-react';
+import { Zap, Clock, BarChart3 } from 'lucide-react';
 import SearchBox from '@/components/search/SearchBox';
 import LoadingProgress from '@/components/search/LoadingProgress';
+import GoogleGeminiLogo from '@/components/ui/GoogleGeminiLogo';
 import { identifyProduct, searchAllPlatforms, getAIVerdict } from '@/lib/searchService';
-import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
 const features = [
   { icon: Zap, title: '10 Platforms', desc: 'Amazon, Flipkart, Myntra & 7 more at once' },
-  { icon: Shield, title: 'AI-Powered', desc: 'Identify products from images, URLs or text' },
+  { icon: GoogleGeminiLogo, isGemini: true, title: 'Google Gemini Pro', desc: 'Multimodal AI product identification from images, URLs & text' },
   { icon: Clock, title: 'Real-Time', desc: 'Live prices compared in seconds' },
   { icon: BarChart3, title: 'Price Alerts', desc: 'Track products and get notified on drops' },
 ];
@@ -24,28 +24,28 @@ export default function Home() {
     setIsLoading(true);
     setPlatformStatuses({});
 
-    // 1. AI identifies the product
+    // 1. AI identifies the product via Google Gemini Pro
     try {
       const productInfo = await identifyProduct(query, inputType, fileUrl);
 
-    // 2. Search all platforms with live progress updates
-    const onPlatformUpdate = (platformId, status, count) => {
-      setPlatformStatuses(prev => ({
-        ...prev,
-        [platformId]: status,
-        ...(count !== undefined ? { [platformId + '_count']: count } : {})
-      }));
-    };
+      // 2. Search all platforms with live progress updates
+      const onPlatformUpdate = (platformId, status, count) => {
+        setPlatformStatuses(prev => ({
+          ...prev,
+          [platformId]: status,
+          ...(count !== undefined ? { [platformId + '_count']: count } : {})
+        }));
+      };
 
-    const results = await searchAllPlatforms(productInfo, query, onPlatformUpdate);
+      const results = await searchAllPlatforms(productInfo, query, onPlatformUpdate);
 
-    // 3. Get AI verdict
-    const verdict = await getAIVerdict(productInfo, results);
+      // 3. Get AI verdict via Google Gemini Pro
+      const verdict = await getAIVerdict(productInfo, results);
 
-    // 4. Persist to history
-    let searchRecord;
-    try {
-      searchRecord = await base44.entities.SearchHistory.create({
+      // 4. Persist to history
+      const mockId = Math.random().toString(36).substring(2, 10);
+      const searchRecord = {
+        id: mockId,
         query,
         input_type: inputType,
         product_name: `${productInfo.brand || ''} ${productInfo.productName || ''}`.trim() || query,
@@ -54,29 +54,21 @@ export default function Home() {
         image_url: fileUrl || results[0]?.image_url || '',
         results,
         ai_verdict: verdict,
-        share_id: Math.random().toString(36).substring(2, 10),
-      });
-    } catch (e) {
-      console.warn("DB Create failed, generating mock record ID.");
-      const mockId = Math.random().toString(36).substring(2, 10);
-      searchRecord = { id: mockId };
+        created_date: new Date().toISOString()
+      };
       
-      localStorage.setItem(`mock_search_${mockId}`, JSON.stringify({
-        query,
-        input_type: inputType,
-        product_name: `${productInfo.brand || ''} ${productInfo.productName || ''}`.trim() || query,
-        brand: productInfo.brand || '',
-        category: productInfo.category || '',
-        image_url: fileUrl || results[0]?.image_url || '',
-        results,
-        ai_verdict: verdict
-      }));
-    }
+      // Save detailed record for Results page
+      localStorage.setItem(`mock_search_${mockId}`, JSON.stringify(searchRecord));
+      
+      // Save to search history list
+      const existingHistory = JSON.parse(localStorage.getItem('search_history') || '[]');
+      existingHistory.unshift(searchRecord);
+      localStorage.setItem('search_history', JSON.stringify(existingHistory.slice(0, 50)));
 
-    navigate(`/results/${searchRecord.id}`);
+      navigate(`/results/${mockId}`);
     } catch (error) {
-      console.error("Search failed:", error);
-      toast.error(error.message || "Failed to search. Please try again.");
+      console.error(error);
+      toast.error('Search failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -93,9 +85,15 @@ export default function Home() {
 
         <div className="relative max-w-4xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
-              <Sparkles className="w-3.5 h-3.5 text-primary" />
-              <span className="text-xs font-semibold text-primary">AI-Powered Price Intelligence</span>
+            {/* Google Gemini Pro Badge */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border border-purple-500/20 mb-6 shadow-sm">
+              <GoogleGeminiLogo className="w-4 h-4" />
+              <span className="text-xs font-semibold">
+                <span className="text-muted-foreground">Powered by </span>
+                <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+                  Google Gemini Pro API
+                </span>
+              </span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-[1.1] mb-4">
@@ -105,7 +103,7 @@ export default function Home() {
 
             <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed">
               Paste a product image, URL, or type what you're looking for.
-              PricePilot scans Amazon, Flipkart, Myntra and 7 more in seconds.
+              PricePilot uses Google Gemini Pro to identify products and scans Amazon, Flipkart, Myntra and 7 more in seconds.
             </p>
           </motion.div>
 
@@ -129,7 +127,11 @@ export default function Home() {
                   className="bg-card rounded-xl border border-border/50 p-5 hover:shadow-md hover:border-primary/20 transition-all"
                 >
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
-                    <feature.icon className="w-5 h-5 text-primary" />
+                    {feature.isGemini ? (
+                      <feature.icon className="w-5 h-5" />
+                    ) : (
+                      <feature.icon className="w-5 h-5 text-primary" />
+                    )}
                   </div>
                   <h3 className="text-sm font-bold text-foreground mb-1">{feature.title}</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">{feature.desc}</p>

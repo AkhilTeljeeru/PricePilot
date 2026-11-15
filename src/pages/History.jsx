@@ -1,6 +1,5 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { History as HistoryIcon, Trash2, Search, ArrowRight, Loader2, Image, Link2, Type } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,11 +14,19 @@ export default function History() {
 
   const { data: searches = [], isLoading } = useQuery({
     queryKey: ['searchHistory'],
-    queryFn: () => base44.entities.SearchHistory.list('-created_date', 50),
+    queryFn: () => {
+      return JSON.parse(localStorage.getItem('search_history') || '[]').sort((a, b) => 
+        new Date(b.created_date || 0) - new Date(a.created_date || 0)
+      );
+    },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.SearchHistory.delete(id),
+    mutationFn: (id) => {
+      let history = JSON.parse(localStorage.getItem('search_history') || '[]');
+      history = history.filter(item => item.id !== id);
+      localStorage.setItem('search_history', JSON.stringify(history));
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['searchHistory'] });
       toast.success('Search removed');

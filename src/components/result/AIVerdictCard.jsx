@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, TrendingDown, AlertTriangle, Lightbulb, Info } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { TrendingDown, AlertTriangle, Lightbulb } from 'lucide-react';
+import GoogleGeminiLogo from '@/components/ui/GoogleGeminiLogo';
 
 export default function AIVerdictCard({ verdict }) {
   if (!verdict) return null;
@@ -14,11 +14,19 @@ export default function AIVerdictCard({ verdict }) {
       className="rounded-2xl bg-gradient-to-br from-primary/5 via-card to-chart-4/5 border border-primary/20 shadow-lg"
     >
       <div className="p-6">
-        <div className="flex items-center gap-2.5 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-primary" />
+        <div className="flex items-center justify-between gap-2.5 mb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+              <GoogleGeminiLogo className="w-4 h-4" />
+            </div>
+            <h3 className="text-base font-bold text-foreground">AI Verdict</h3>
           </div>
-          <h3 className="text-base font-bold text-foreground">AI Verdict</h3>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border border-purple-500/20 text-xs font-semibold">
+            <GoogleGeminiLogo className="w-3.5 h-3.5" />
+            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+              Google Gemini Pro
+            </span>
+          </div>
         </div>
 
         <p className="text-base font-medium text-foreground mb-4 leading-relaxed">{verdict.verdict}</p>
@@ -59,33 +67,28 @@ export default function AIVerdictCard({ verdict }) {
               <Lightbulb className="w-4 h-4 text-chart-3" />
               <span className="text-xs font-semibold text-foreground">Buying Tips</span>
             </div>
-            <div className="space-y-1.5">
-              {verdict.buying_tips.slice(0, 3).map((tip, i) => (
-                <p key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                  <span className="text-chart-3 mt-0.5">•</span>{tip}
-                </p>
+            <ul className="space-y-1.5">
+              {verdict.buying_tips.map((tip, i) => (
+                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                  <span className="text-primary font-bold">·</span>
+                  <span>{tip}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         )}
 
         {verdict.alternatives?.length > 0 && (
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Info className="w-4 h-4 text-primary" />
-              <span className="text-xs font-semibold text-foreground">Alternatives to Consider</span>
-            </div>
+            <h4 className="text-xs font-semibold text-foreground mb-2">Alternative Suggestions</h4>
             <div className="space-y-2">
               {verdict.alternatives.map((alt, i) => (
-                <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-muted/40">
-                  <Badge variant="outline" className="text-[10px] mt-0.5 flex-shrink-0">{i + 1}</Badge>
-                  <div>
-                    <p className="text-xs font-medium text-foreground">{alt.name}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{alt.reason}</p>
-                    {alt.estimated_price && (
-                      <p className="text-[11px] text-primary font-medium mt-0.5">~{alt.estimated_price}</p>
-                    )}
+                <div key={i} className="p-2.5 rounded-xl bg-muted/40 border border-border/40">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-xs font-semibold text-foreground">{alt.name}</span>
+                    <span className="text-xs font-bold text-primary">{alt.estimated_price}</span>
                   </div>
+                  <p className="text-xs text-muted-foreground">{alt.reason}</p>
                 </div>
               ))}
             </div>

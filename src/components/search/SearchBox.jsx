@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import GoogleGeminiLogo from '@/components/ui/GoogleGeminiLogo';
 
 export default function SearchBox({ onSearch, isLoading }) {
   const [activeTab, setActiveTab] = useState('text');
@@ -16,15 +16,17 @@ export default function SearchBox({ onSearch, isLoading }) {
   const fileInputRef = useRef(null);
 
   const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setImagePreview(ev.target.result);
-    reader.readAsDataURL(file);
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setUploadedFileUrl(file_url);
-    setUploading(false);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result;
+      setImagePreview(dataUrl);
+      setUploadedFileUrl(dataUrl);
+      setUploading(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = () => {
@@ -32,8 +34,6 @@ export default function SearchBox({ onSearch, isLoading }) {
     else if (activeTab === 'url' && urlQuery.trim()) onSearch(urlQuery.trim(), 'url');
     else if (activeTab === 'image' && uploadedFileUrl) onSearch('image search', 'image', uploadedFileUrl);
   };
-
-  const handleKeyDown = (e) => { if (e.key === 'Enter') handleSubmit(); };
 
   const clearImage = () => {
     setImagePreview(null);
@@ -68,9 +68,9 @@ export default function SearchBox({ onSearch, isLoading }) {
               <Input
                 placeholder="e.g. Samsung Galaxy S24 Ultra 256GB Titanium Black"
                 value={textQuery}
-                onChange={e => setTextQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="h-14 pl-12 pr-4 text-base rounded-xl bg-card border-border/50 shadow-sm"
+                onChange={(e) => setTextQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && !isDisabled && handleSubmit()}
+                className="pl-12 h-14 text-base rounded-xl bg-card border-border/50 shadow-sm focus-visible:ring-primary"
               />
             </div>
           </TabsContent>
@@ -79,11 +79,11 @@ export default function SearchBox({ onSearch, isLoading }) {
             <div className="relative">
               <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
-                placeholder="Paste product URL from Amazon, Flipkart, Myntra..."
+                placeholder="Paste Amazon, Flipkart, or Myntra product link..."
                 value={urlQuery}
-                onChange={e => setUrlQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="h-14 pl-12 pr-4 text-base rounded-xl bg-card border-border/50 shadow-sm"
+                onChange={(e) => setUrlQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && !isDisabled && handleSubmit()}
+                className="pl-12 h-14 text-base rounded-xl bg-card border-border/50 shadow-sm focus-visible:ring-primary"
               />
             </div>
           </TabsContent>
@@ -91,13 +91,13 @@ export default function SearchBox({ onSearch, isLoading }) {
           <TabsContent value="image" className="mt-0">
             {imagePreview ? (
               <div className="relative rounded-xl overflow-hidden bg-card border border-border/50 p-4">
-                <button onClick={clearImage} className="absolute top-2 right-2 z-10 bg-foreground/80 text-background rounded-full p-1.5">
+                <button onClick={clearImage} className="absolute top-2 right-2 z-10 bg-foreground/80 text-background rounded-full p-1.5 hover:bg-foreground transition-colors">
                   <X className="w-4 h-4" />
                 </button>
                 <img src={imagePreview} alt="Preview" className="max-h-48 mx-auto rounded-lg object-contain" />
                 {uploading && (
                   <div className="flex items-center justify-center gap-2 mt-3 text-sm text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin" /> Uploading...
+                    <Loader2 className="w-4 h-4 animate-spin" /> Processing image...
                   </div>
                 )}
               </div>
@@ -111,7 +111,10 @@ export default function SearchBox({ onSearch, isLoading }) {
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-medium text-foreground">Upload product image</p>
-                  <p className="text-xs text-muted-foreground mt-1">AI will identify the product automatically</p>
+                  <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1.5">
+                    <GoogleGeminiLogo className="w-3.5 h-3.5" />
+                    <span>Google Gemini Pro multimodal identification</span>
+                  </p>
                 </div>
               </button>
             )}
@@ -125,7 +128,7 @@ export default function SearchBox({ onSearch, isLoading }) {
           className="w-full mt-4 h-12 text-base font-semibold rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
         >
           {isLoading ? (
-            <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Searching across platforms...</>
+            <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Scanning with Google Gemini Pro...</>
           ) : (
             <><Search className="w-5 h-5 mr-2" />Compare Prices Across 10 Platforms</>
           )}
